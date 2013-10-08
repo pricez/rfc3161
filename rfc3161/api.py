@@ -1,3 +1,8 @@
+import datetime
+import hashlib
+import urllib2
+import base64
+
 from pyasn1.codec.der import encoder, decoder
 from pyasn1_modules import rfc2459
 from pyasn1.type import univ
@@ -6,11 +11,9 @@ import M2Crypto.X509 as X509
 import socket
 
 import rfc3161
-import hashlib
-import urllib2
-import base64
 
-__all__ = ('RemoteTimestamper','check_timestamp','get_hash_oid', 'TimestampingError')
+__all__ = ('RemoteTimestamper','check_timestamp','get_hash_oid',
+    'TimestampingError', 'get_timestamp')
 
 id_attribute_messageDigest = univ.ObjectIdentifier((1,2,840,113549,1,9,4,))
 
@@ -19,6 +22,25 @@ def get_hash_oid(hashname):
 
 class TimestampingError(RuntimeError):
     pass
+
+def get_timestamp(tst):
+    try:
+        if not isinstance(tst, rfc3161.TimeStampToken):
+            tst, substrate = decoder.decode(tst, asn1Spec=rfc3161.TimeStampToken())
+            if substrate:
+                raise ValueError("extra data after tst")
+
+        tstinfo = tst.getComponentByName('content').getComponentByPosition(2).getComponentByPosition(1)
+        tstinfo, substrate = decoder.decode(tstinfo, asn1Spec=univ.OctetString())
+        if substrate:
+            raise ValueError("extra data after tst")
+        tstinfo, substrate = decoder.decode(tstinfo, asn1Spec=rfc3161.TSTInfo())
+        if substrate:
+            raise ValueError("extra data after tst")
+        genTime = tstinfo.getComponentByName('genTime')
+        return datetime.datetime.strptime(str(genTime), '%Y%m%d%H%M%SZ')
+    except PyAsn1Error, e:
+        raise ValueError('not a valid TimeStampToken', e)
 
 def check_timestamp(tst, certificate, data=None, sha1=None, hashname=None):
     hashobj = hashlib.new(hashname or 'sha1')
