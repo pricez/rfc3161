@@ -132,7 +132,7 @@ def check_timestamp(tst, certificate, data=None, digest=None, hashname=None):
 
 
 class RemoteTimestamper(object):
-    def __init__(self, url, certificate=None, capath=None, cafile=None, username=None, password=None, hashname=None):
+    def __init__(self, url, certificate=None, capath=None, cafile=None, username=None, password=None, hashname=None, include_tsa_certificate=False):
         self.url = url
         self.certificate = certificate
         self.capath = capath
@@ -140,6 +140,7 @@ class RemoteTimestamper(object):
         self.username = username
         self.password = password
         self.hashobj = hashlib.new(hashname or 'sha1')
+        self.include_tsa_certificate = include_tsa_certificate
 
     def check_response(self, response, digest):
         '''
@@ -148,7 +149,7 @@ class RemoteTimestamper(object):
         tst = response.time_stamp_token
         return check_timestamp(tst, digest=digest, certificate=self.certificate, hashname=self.hashobj.name)
 
-    def __call__(self, data=None, digest=None):
+    def __call__(self, data=None, digest=None, include_tsa_certificate=None):
         algorithm_identifier = rfc2459.AlgorithmIdentifier()
         algorithm_identifier.setComponentByPosition(0, get_hash_oid(self.hashobj.name))
         message_imprint = rfc3161.MessageImprint()
@@ -164,7 +165,7 @@ class RemoteTimestamper(object):
         request = rfc3161.TimeStampReq()
         request.setComponentByPosition(0, 'v1')
         request.setComponentByPosition(1, message_imprint)
-        request.setComponentByPosition(4, True)
+        request.setComponentByPosition(4, include_tsa_certificate if include_tsa_certificate is not None else self.include_tsa_certificate)
         binary_request = encoder.encode(request)
         http_request = urllib2.Request(self.url, binary_request,
                 { 'Content-Type': 'application/timestamp-query' })
