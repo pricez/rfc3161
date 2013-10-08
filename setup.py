@@ -18,14 +18,7 @@ class TestCommand(Command):
         '''
         Finds all the tests modules in tests/, and runs them.
         '''
-        testfiles = [ ]
-        for t in glob(pjoin(self._dir, 'tests', '*.py')):
-            if not t.endswith('__init__.py'):
-                testfiles.append('.'.join(
-                    ['tests', splitext(basename(t))[0]])
-                )
-
-        tests = TestLoader().loadTestsFromNames(testfiles)
+        tests = TestLoader().loadTestsFromName('tests.api')
         t = TextTestRunner(verbosity = 1)
         t.run(tests)
 
