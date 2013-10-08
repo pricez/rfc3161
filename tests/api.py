@@ -12,9 +12,10 @@ class Rfc3161(unittest.TestCase):
             '../data/certum_certificate.crt')
 
     def test_timestamp(self):
+        data = 'xx'
         certificate = file(self.CERTIFICATE).read()
         value, substrate = rfc3161.RemoteTimestamper(
-                self.PUBLIC_TSA_SERVER, certificate=certificate)(data='xx')
+                self.PUBLIC_TSA_SERVER, certificate=certificate)(data=data)
         self.assertIsInstance(rfc3161.get_timestamp(value), datetime.datetime)
         self.assertNotEqual(value, None)
         self.assertEqual(substrate, '')
