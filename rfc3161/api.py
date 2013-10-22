@@ -182,7 +182,6 @@ class RemoteTimestamper(object):
             response = urllib2.urlopen(http_request).read()
         except (IOError, socket.error), e:
             raise TimestampingError('Unable to send the request to %s' % self.url, e)
-        open('response.tsr', 'w').write(response)
         tst_response, substrate = decoder.decode(response, asn1Spec=rfc3161.TimeStampResp())
         if substrate:
             return False, 'Extra data returned'
