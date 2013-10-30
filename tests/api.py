@@ -47,3 +47,9 @@ class Rfc3161(unittest.TestCase):
                 certificate=os.path.join(os.path.dirname(__file__),
                     '../data/e_szigno_test_tsa2.crt'),
                 data=data, nonce=2, hashname='sha256')
+
+    def test_fedict(self):
+        url = 'http://tsa.belgium.be/connect'
+        self.default_test(url,
+                os.path.join(os.path.dirname(__file__),
+                    '../data/fedict.crt'))
