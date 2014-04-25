@@ -2,4 +2,4 @@ from types import *
 from constants import *
 from api import *
 
-VERSION = '0.1.9'
+VERSION = '1.0.0'
