@@ -1,8 +1,6 @@
 #!/usr/bin/python
 from distutils.core import setup, Command
 from unittest import TextTestRunner, TestLoader
-from glob import glob
-from os.path import splitext, basename, join as pjoin
 import os
 
 class TestCommand(Command):
@@ -27,6 +25,7 @@ setup(name='rfc3161',
         license='MIT',
         url='https://dev.entrouvert.org/projects/python-rfc3161',
         description='Python implementation of the RFC3161 specification, using pyasn1',
+        long_description=file('README').read(),
         author='Benjamin Dauvergne',
         author_email='bdauvergne@entrouvert.com',
         packages=['rfc3161'],
