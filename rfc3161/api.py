@@ -149,9 +149,15 @@ class RemoteTimestamper(object):
            Check validity of a TimeStampResponse
         '''
         tst = response.time_stamp_token
-        return check_timestamp(tst, digest=digest,
-                certificate=self.certificate, hashname=self.hashobj.name,
-                nonce=nonce)
+        return self.check(tst, digest=digest, nonce=nonce)
+
+    def check(self, tst, data=None, digest=None, nonce=None):
+        return check_timestamp(tst, digest=digest, data=data, nonce=nonce,
+                certificate=self.certificate, hashname=self.hashobj.name)
+
+    def timestamp(self, data=None, digest=None, include_tsa_certificate=None, nonce=None):
+        return self(data=data, digest=digest,
+                include_tsa_certificate=include_tsa_certificate, nonce=nonce)
 
     def __call__(self, data=None, digest=None, include_tsa_certificate=None, nonce=None):
         algorithm_identifier = rfc2459.AlgorithmIdentifier()
