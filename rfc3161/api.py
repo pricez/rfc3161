@@ -141,7 +141,7 @@ class RemoteTimestamper(object):
         self.cafile = cafile
         self.username = username
         self.password = password
-        self.hashobj = hashlib.new(hashname or 'sha1')
+        self.hashname = hashname or 'sha1'
         self.include_tsa_certificate = include_tsa_certificate
 
     def check_response(self, response, digest, nonce=None):
@@ -153,7 +153,7 @@ class RemoteTimestamper(object):
 
     def check(self, tst, data=None, digest=None, nonce=None):
         return check_timestamp(tst, digest=digest, data=data, nonce=nonce,
-                certificate=self.certificate, hashname=self.hashobj.name)
+                certificate=self.certificate, hashname=self.hashname)
 
     def timestamp(self, data=None, digest=None, include_tsa_certificate=None, nonce=None):
         return self(data=data, digest=digest,
@@ -161,14 +161,15 @@ class RemoteTimestamper(object):
 
     def __call__(self, data=None, digest=None, include_tsa_certificate=None, nonce=None):
         algorithm_identifier = rfc2459.AlgorithmIdentifier()
-        algorithm_identifier.setComponentByPosition(0, get_hash_oid(self.hashobj.name))
+        algorithm_identifier.setComponentByPosition(0, get_hash_oid(self.hashname))
         message_imprint = rfc3161.MessageImprint()
         message_imprint.setComponentByPosition(0, algorithm_identifier)
+        hashobj = hashlib.new(self.hashname)
         if data:
-            self.hashobj.update(data)
-            digest = self.hashobj.digest()
+            hashobj.update(data)
+            digest = hashobj.digest()
         elif digest:
-            assert len(digest) == self.hashobj.digest_size, 'digest length is wrong'
+            assert len(digest) == hashobj.digest_size, 'digest length is wrong'
         else:
             raise ValueError('You must pass some data to digest, or the digest')
         message_imprint.setComponentByPosition(1, digest)
