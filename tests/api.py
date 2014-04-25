@@ -23,6 +23,7 @@ class Rfc3161(unittest.TestCase):
         if nonce:
             kwargs['nonce'] = nonce
         value, substrate = timestamper(data=data, **kwargs)
+        self.assertIsNot(value, False, msg=substrate)
         self.assertIsInstance(rfc3161.get_timestamp(value), datetime.datetime)
         self.assertNotEqual(value, None)
         self.assertEqual(substrate, '')
@@ -48,8 +49,9 @@ class Rfc3161(unittest.TestCase):
                     '../data/e_szigno_test_tsa2.crt'),
                 data=data, nonce=2, hashname='sha256')
 
-    def test_fedict(self):
-        url = 'http://tsa.belgium.be/connect'
-        self.default_test(url,
-                os.path.join(os.path.dirname(__file__),
-                    '../data/fedict.crt'))
+    # Fedict TSS is broken for now
+    # def test_fedict(self):
+    #    url = 'http://tsa.belgium.be/connect'
+    #    self.default_test(url,
+    #            os.path.join(os.path.dirname(__file__),
+    #                '../data/fedict.crt'))
