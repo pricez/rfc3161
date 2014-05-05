@@ -1,5 +1,6 @@
 #!/usr/bin/python
-from distutils.core import setup, Command
+from setuptools import setup
+from distutils.cmd import Command
 from unittest import TextTestRunner, TestLoader
 import os
 
@@ -29,5 +30,8 @@ setup(name='rfc3161',
         author='Benjamin Dauvergne',
         author_email='bdauvergne@entrouvert.com',
         packages=['rfc3161'],
-        requires=['pyasn1', 'pyasn1_modules', 'M2Crypto'],
+        install_requires=[
+            'pyasn1', 
+            'pyasn1_modules', 
+            'M2Crypto'],
         cmdclass={'test': TestCommand})
