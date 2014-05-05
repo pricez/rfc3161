@@ -21,7 +21,7 @@ class TestCommand(Command):
         t.run(tests)
 
 setup(name='rfc3161',
-        version='1.0.2',
+        version='1.0.3',
         license='MIT',
         url='https://dev.entrouvert.org/projects/python-rfc3161',
         description='Python implementation of the RFC3161 specification, using pyasn1',
