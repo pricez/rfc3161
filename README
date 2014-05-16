@@ -9,7 +9,7 @@ protocol from RFC3161.
     >>> rt = rfc3161.RemoteTimestamper('http://time.certum.pl', certificate=certificate)
     >>> rt.timestamp(data='John Doe')
     ('...', '')
-    >>> rt.check(tst, data='John Doe')
+    >>> rt.check(_, data='John Doe')
     (True, '')
     >>> rfc3161.get_timestamp(tst)
     datetime.datetime(2014, 4, 25, 9, 34, 16)
