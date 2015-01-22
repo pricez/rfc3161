@@ -1,6 +1,6 @@
 import datetime
 import hashlib
-import urllib2
+import requests
 import base64
 
 from pyasn1.codec.der import encoder, decoder
@@ -134,7 +134,7 @@ def check_timestamp(tst, certificate, data=None, digest=None, hashname=None, non
 
 
 class RemoteTimestamper(object):
-    def __init__(self, url, certificate=None, capath=None, cafile=None, username=None, password=None, hashname=None, include_tsa_certificate=False):
+    def __init__(self, url, certificate=None, capath=None, cafile=None, username=None, password=None, hashname=None, include_tsa_certificate=False, timeout=10):
         self.url = url
         self.certificate = certificate
         self.capath = capath
@@ -143,6 +143,7 @@ class RemoteTimestamper(object):
         self.password = password
         self.hashname = hashname or 'sha1'
         self.include_tsa_certificate = include_tsa_certificate
+        self.timeout = timeout
 
     def check_response(self, response, digest, nonce=None):
         '''
@@ -180,16 +181,16 @@ class RemoteTimestamper(object):
             request.setComponentByPosition(3, int(nonce))
         request.setComponentByPosition(4, include_tsa_certificate if include_tsa_certificate is not None else self.include_tsa_certificate)
         binary_request = encoder.encode(request)
-        http_request = urllib2.Request(self.url, binary_request,
-                { 'Content-Type': 'application/timestamp-query' })
+        headers = { 'Content-Type': 'application/timestamp-query' }
         if self.username != None:
             base64string = base64.standard_b64encode('%s:%s' % (self.username, self.password))
-            http_request.add_header("Authorization", "Basic %s" % base64string)
+            headers['Authorization'] = "Basic %s" % base64string
         try:
-            response = urllib2.urlopen(http_request).read()
-        except (IOError, socket.error), e:
-            raise TimestampingError('Unable to send the request to %s' % self.url, e)
-        tst_response, substrate = decoder.decode(response, asn1Spec=rfc3161.TimeStampResp())
+            response = requests.post(self.url, data=binary_request,
+                    timeout=self.timeout, headers=headers)
+        except request.RequestException, e:
+            raise TimestampingError('Unable to send the request to %r' % self.url, e)
+        tst_response, substrate = decoder.decode(response.content, asn1Spec=rfc3161.TimeStampResp())
         if substrate:
             return False, 'Extra data returned'
         result, message = self.check_response(tst_response, digest, nonce=nonce)
