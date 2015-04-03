@@ -1,0 +1,23 @@
+Source: rfc3161
+Maintainer: Benjamin Dauvergne <bdauvergne@entrouvert.com>
+Section: python
+Priority: optional
+Build-Depends: python-setuptools (>= 0.6b3), python-all (>= 2.6.6-3), debhelper (>= 7)
+Standards-Version: 3.9.1
+
+Package: python-rfc3161
+Architecture: all
+Depends: ${misc:Depends}, ${python:Depends}, python-pyasn1, python-pyasn1-modules, python-m2crypto
+Description: Python implementation of the RFC3161 specification
+ A simple client library for cryptographic timestamping service implementing the
+ protocol from RFC3161.
+ .
+     >>> import rfc3161
+     >>> certificate = file('data/certum_certificate.crt').read()
+     >>> rt = rfc3161.RemoteTimestamper('http://time.certum.pl', certificate=certificate)
+     >>> rt.timestamp(data='John Doe')
+     ('...', '')
+     >>> rt.check(tst, data='John Doe')
+     (True, '')
+     >>> rfc3161.get_timestamp(tst)
+     datetime.datetime(2014, 4, 25, 9, 34, 16)
