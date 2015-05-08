@@ -10,6 +10,8 @@ from pyasn1.error import PyAsn1Error
 import M2Crypto.X509 as X509
 import socket
 
+from types import TSAPolicyId
+
 import rfc3161
 
 __all__ = ('RemoteTimestamper','check_timestamp','get_hash_oid',
@@ -134,7 +136,9 @@ def check_timestamp(tst, certificate, data=None, digest=None, hashname=None, non
 
 
 class RemoteTimestamper(object):
-    def __init__(self, url, certificate=None, capath=None, cafile=None, username=None, password=None, hashname=None, include_tsa_certificate=False, timeout=10):
+    def __init__(self, url, certificate=None, capath=None, cafile=None,
+                 username=None, password=None, hashname=None,
+                 include_tsa_certificate=False, tsa_policy_id=None, timeout=10):
         self.url = url
         self.certificate = certificate
         self.capath = capath
@@ -143,6 +147,7 @@ class RemoteTimestamper(object):
         self.password = password
         self.hashname = hashname or 'sha1'
         self.include_tsa_certificate = include_tsa_certificate
+        self.tsa_policy_id = tsa_policy_id
         self.timeout = timeout
 
     def check_response(self, response, digest, nonce=None):
@@ -177,6 +182,9 @@ class RemoteTimestamper(object):
         request = rfc3161.TimeStampReq()
         request.setComponentByPosition(0, 'v1')
         request.setComponentByPosition(1, message_imprint)
+        if self.tsa_policy_id:
+            policy = TSAPolicyId(self.tsa_policy_id)
+            request.setComponentByPosition(2, policy)
         if nonce is not None:
             request.setComponentByPosition(3, int(nonce))
         request.setComponentByPosition(4, include_tsa_certificate if include_tsa_certificate is not None else self.include_tsa_certificate)
