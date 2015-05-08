@@ -39,7 +39,7 @@ class TimeStampReq(univ.Sequence):
 # Reponse
 
 class PKIFreeText(univ.SequenceOf):
-    componentType = char.UTF8String
+    componentType = char.UTF8String()
     sizeSpec = univ.SequenceOf.sizeSpec + constraint.ValueSizeConstraint(1, MAX)
 
 class PKIStatus(univ.Integer):
