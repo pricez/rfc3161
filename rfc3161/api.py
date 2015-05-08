@@ -55,6 +55,8 @@ def get_timestamp(tst):
         raise ValueError('not a valid TimeStampToken', e)
 
 def check_timestamp(tst, certificate, data=None, digest=None, hashname=None, nonce=None):
+    if tst is None:
+        return False, "TimeStampToken is null"
     hashname = hashname or 'sha1'
     hashobj = hashlib.new(hashname)
     if digest is None:
