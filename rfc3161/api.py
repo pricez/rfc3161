@@ -32,6 +32,17 @@ def get_hash_class_from_oid(oid):
     h = get_hash_from_oid(oid)
     return getattr(hashlib, h)
 
+def _get_gen_time(tstinfo):
+    formats = ['%Y%m%d%H%M%S.%fZ', '%Y%m%d%H%M%SZ']
+    genTime = tstinfo.getComponentByName('genTime')
+    for f in formats:
+        try:
+            return datetime.datetime.strptime(str(genTime), f)
+        except ValueError:
+            pass
+    else:
+        raise ValueError("not a valid genTime: %s" % genTime)
+
 class TimestampingError(RuntimeError):
     pass
 
@@ -49,8 +60,7 @@ def get_timestamp(tst):
         tstinfo, substrate = decoder.decode(tstinfo, asn1Spec=rfc3161.TSTInfo())
         if substrate:
             raise ValueError("extra data after tst")
-        genTime = tstinfo.getComponentByName('genTime')
-        return datetime.datetime.strptime(str(genTime), '%Y%m%d%H%M%SZ')
+        return _get_gen_time(tstinfo)
     except PyAsn1Error, e:
         raise ValueError('not a valid TimeStampToken', e)
 
@@ -70,12 +80,7 @@ def check_timestamp(tst, certificate, data=None, digest=None, hashname=None, non
         if substrate:
             return False, "extra data after tst"
     signed_data = tst.content
-    if certificate != "":
-        try:
-            certificate = X509.load_cert_string(certificate, X509.FORMAT_PEM)
-        except:
-            certificate = X509.load_cert_string(certificate, X509.FORMAT_DER)
-    else:
+    if certificate == "":
         return False, "missing certificate"
     if nonce is not None and int(tst.tst_info['nonce']) != int(nonce):
         return False, 'nonce is different or missing'
@@ -126,15 +131,21 @@ def check_timestamp(tst, certificate, data=None, digest=None, hashname=None, non
     else:
         signed_data = content
     # check signature
-    signature = signer_info['encryptedDigest']
-    pub_key = certificate.get_pubkey()
-    pub_key.reset_context(signer_hash_name)
-    pub_key.verify_init()
-    pub_key.verify_update(signed_data)
-    if pub_key.verify_final(str(signature)) != 1:
-        return False, 'Bad signature'
-    return True, ''
-
+    if isinstance(certificate, basestring):
+        certificate = [certificate]
+    for cert in certificate:
+        try:
+            cert = X509.load_cert_string(cert, X509.FORMAT_PEM)
+        except:
+            cert = X509.load_cert_string(cert, X509.FORMAT_DER)
+        signature = signer_info['encryptedDigest']
+        pub_key = cert.get_pubkey()
+        pub_key.reset_context(signer_hash_name)
+        pub_key.verify_init()
+        pub_key.verify_update(signed_data)
+        if pub_key.verify_final(str(signature)) == 1:
+            return True, ''
+    return False, 'Bad signature'
 
 
 class RemoteTimestamper(object):
