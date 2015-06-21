@@ -209,7 +209,7 @@ class RemoteTimestamper(object):
         try:
             response = requests.post(self.url, data=binary_request,
                     timeout=self.timeout, headers=headers)
-        except request.RequestException, e:
+        except requests.RequestException, e:
             raise TimestampingError('Unable to send the request to %r' % self.url, e)
         tst_response, substrate = decoder.decode(response.content, asn1Spec=rfc3161.TimeStampResp())
         if substrate:
