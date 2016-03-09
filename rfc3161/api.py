@@ -178,6 +178,14 @@ class RemoteTimestamper(object):
         return self(data=data, digest=digest,
                 include_tsa_certificate=include_tsa_certificate, nonce=nonce)
 
+    def _make_request(self, url, data, timeout, headers):
+        try:
+            return requests.post(self.url, data=data, timeout=self.timeout,
+                                 headers=headers)
+        except requests.RequestException, e:
+            raise TimestampingError('Unable to send the request to %r' %
+                                    self.url, e)
+
     def __call__(self, data=None, digest=None, include_tsa_certificate=None, nonce=None):
         algorithm_identifier = rfc2459.AlgorithmIdentifier()
         algorithm_identifier.setComponentByPosition(0, get_hash_oid(self.hashname))
@@ -206,11 +214,8 @@ class RemoteTimestamper(object):
         if self.username != None:
             base64string = base64.standard_b64encode('%s:%s' % (self.username, self.password))
             headers['Authorization'] = "Basic %s" % base64string
-        try:
-            response = requests.post(self.url, data=binary_request,
-                    timeout=self.timeout, headers=headers)
-        except requests.RequestException, e:
-            raise TimestampingError('Unable to send the request to %r' % self.url, e)
+        response = self._make_request(self.url, binary_request, self.timeout,
+                                      headers)
         tst_response, substrate = decoder.decode(response.content, asn1Spec=rfc3161.TimeStampResp())
         if substrate:
             return False, 'Extra data returned'
